@@ -44,6 +44,14 @@ const Content = styled.div(() => ({
   },
 }));
 
+const UserInfo = styled.div(() => ({
+  padding: '10px',
+  borderTop: '1px solid #ccc',
+  '& > p': {
+    margin: '5px 0',
+  },
+}));
+
 const Button = styled.button(() => ({
   position: 'absolute',
   bottom: 0,
@@ -55,12 +63,14 @@ const Button = styled.button(() => ({
   height: '50px',
 }));
 
+// centered the carousel navigation buttons vertically relative to the image by adding top: 50%
 const PrevButton = styled(Button)`
   left: 10px;
+  top: 50%;
 `;
-
 const NextButton = styled(Button)`
   right: 10px;
+  top: 50%;
 `;
 
 const Post = ({ post }) => {
@@ -69,7 +79,7 @@ const Post = ({ post }) => {
   const handleNextClick = () => {
     if (carouselRef.current) {
       carouselRef.current.scrollBy({
-        left: 50,
+        left: 300, // left value changed to 300 so when clicked a new image is shown.
         behavior: 'smooth',
       });
     }
@@ -78,10 +88,15 @@ const Post = ({ post }) => {
   const handlePrevClick = () => {
     if (carouselRef.current) {
       carouselRef.current.scrollBy({
-        left: -70,
+        left: -300, // left value changed to 300 so when clicked a new image is shown.
         behavior: 'smooth',
       });
     }
+  };
+
+  const getInitials = name => {
+    const [firstName, lastName] = name.split(' ');
+    return `${firstName[0]}${lastName[0]}`;
   };
 
   return (
@@ -101,6 +116,14 @@ const Post = ({ post }) => {
         <h2>{post.title}</h2>
         <p>{post.body}</p>
       </Content>
+      <UserInfo>
+        <p>
+          <strong>Initials:</strong> {getInitials(post.user.name)}
+        </p>
+        <p>
+          <strong>Email:</strong> {post.user.email}
+        </p>
+      </UserInfo>
     </PostContainer>
   );
 };

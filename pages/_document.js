@@ -20,6 +20,7 @@ class MyDocument extends Document {
               margin: 0;
               padding: 0;
               /* Add more styles as needed */
+              position: relative,
             }
 
             div,

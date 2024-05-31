@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import Post from './Post';
 import Container from '../common/Container';
-import useWindowWidth from '../hooks/useWindowWidth';
+import { useWindowWidth } from '../hooks/useWindowWidth';
 
 const PostListContainer = styled.div(() => ({
   display: 'flex',
@@ -36,40 +36,59 @@ export default function Posts() {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [hasMore, setHasMore] = useState(true); // Track if there are more posts to load
+  const [page, setPage] = useState(0); // Track the current page
+
   const { isSmallerDevice } = useWindowWidth();
+  const limit = isSmallerDevice ? 5 : 10;
 
   useEffect(() => {
     const fetchPost = async () => {
       const { data: posts } = await axios.get('/api/v1/posts', {
-        params: { start: 0, limit: isSmallerDevice ? 5 : 10 },
+        params: { start: 0, limit },
       });
       setPosts(posts);
+      setHasMore(posts.length === limit); // If the fetched posts are less than the limit, there are no more posts
     };
 
     fetchPost();
-  }, [isSmallerDevice]);
+  }, [isSmallerDevice, limit]);
 
-  const handleClick = () => {
+  const handleClick = async () => {
     setIsLoading(true);
 
-    setTimeout(() => {
+    const nextPage = page + 1;
+
+    try {
+      const { data: newPosts } = await axios.get('/api/v1/posts', {
+        params: { start: nextPage * limit, limit },
+      });
+
+      setPosts(prevPosts => [...prevPosts, ...newPosts]);
+      setPage(nextPage);
+      setHasMore(newPosts.length === limit); // If the fetched posts are less than the limit, there are no more posts
+    } catch (error) {
+      console.error('Error loading more posts:', error);
+    } finally {
       setIsLoading(false);
-    }, 3000);
+    }
   };
 
   return (
     <Container>
       <PostListContainer>
-        {posts.map(post => (
-          <Post post={post} />
+        {posts.map((post, index) => (
+          <Post key={index} post={post} />
         ))}
       </PostListContainer>
 
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <LoadMoreButton onClick={handleClick} disabled={isLoading}>
-          {!isLoading ? 'Load More' : 'Loading...'}
-        </LoadMoreButton>
-      </div>
+      {hasMore && (
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <LoadMoreButton onClick={handleClick} disabled={isLoading}>
+            {!isLoading ? 'Load More' : 'Loading...'}
+          </LoadMoreButton>
+        </div>
+      )}
     </Container>
   );
 }
